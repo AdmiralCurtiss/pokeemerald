@@ -965,7 +965,7 @@ _08152E98:
 	.pool
 	thumb_func_end sub_8152E10
 
-	thumb_func_start sub_8152EC8  ; called on game init, checks if the save files are valid (and possibly more?)
+	thumb_func_start sub_8152EC8  /* called on game init, checks if the save files are valid (and possibly more?) */
 sub_8152EC8: @ 8152EC8
 	push {r4-r7,lr}
 	mov r7, r10
@@ -981,18 +981,18 @@ sub_8152EC8: @ 8152EC8
 	movs r5, 0
 	movs r4, 0
 	ldr r7, =gUnknown_03006204
-_08152EE4:  ; save read/check loop, reads all 0xD blocks of first save file and checks if valid
+_08152EE4:  /* save read/check loop, reads all 0xD blocks of first save file and checks if valid */
 	lsls r0, r4, 24
 	lsrs r0, 24
 	ldr r1, [r7]
-	bl sub_815314C  ; load save block from flash into WRAM
+	bl sub_815314C  /* load save block from flash into WRAM */
 	ldr r2, [r7]
 	ldr r1, =0x00000ff8
 	adds r0, r2, r1
 	ldr r1, [r0]
-	ldr r0, =0x08012025  ; magic number in save block footer that indicates initialization
+	ldr r0, =0x08012025  /* magic number in save block footer that indicates initialization */
 	cmp r1, r0
-	bne _08152F34  ; jump if magic number check failed
+	bne _08152F34  /* jump if magic number check failed */
 	movs r5, 0x1
 	ldr r3, =0x00000ff4
 	adds r0, r2, r3
@@ -1009,31 +1009,31 @@ _08152EE4:  ; save read/check loop, reads all 0xD blocks of first save file and 
 	adds r0, r1, r3
 	ldrh r0, [r0]
 	cmp r0, r2
-	bne _08152F34  ; jump if checksum mismatch
+	bne _08152F34  /* jump if checksum mismatch */
 	ldr r2, =0x00000ffc
 	adds r0, r1, r2
 	ldr r0, [r0]
-	mov r8, r0    ; store # of times saved of current save block in r8
+	mov r8, r0    /* store # of times saved of current save block in r8 */
 	subs r3, 0x2
 	adds r1, r3
 	adds r0, r5, 0
-	ldrh r1, [r1]  ; load ID of current save block
+	ldrh r1, [r1]  /* load ID of current save block */
 	lsls r0, r1
-	orrs r6, r0    ; remember that we have successfully read the current save block's ID in r6
+	orrs r6, r0    /* remember that we have successfully read the current save block's ID in r6 */
 _08152F34:
 	adds r0, r4, 0x1
 	lsls r0, 16
 	lsrs r4, r0, 16
 	cmp r4, 0xD
-	bls _08152EE4  ; loop until 0xD save blocks have been read (amount of blocks in a valid save slot)
+	bls _08152EE4  /* loop until 0xD save blocks have been read (amount of blocks in a valid save slot) */
 	cmp r5, 0
-	beq _08152F70  ; jump if all blocks failed the magic number check...?
+	beq _08152F70  /* jump if all blocks failed the magic number check...? */
 	ldr r0, =0x00003fff
 	movs r1, 0xFF
 	str r1, [sp]
 	cmp r6, r0
-	bne _08152F74  ; jump if any block failed checksum verification
-	movs r2, 0x1   ; remember that first save slot is valid
+	bne _08152F74  /* jump if any block failed checksum verification */
+	movs r2, 0x1   /* remember that first save slot is valid */
 	str r2, [sp]
 	b _08152F74
 	.pool
@@ -1045,9 +1045,9 @@ _08152F74:
 	movs r5, 0
 	movs r4, 0
 	ldr r7, =gUnknown_03006204
-_08152F7C:  ; same loop for the second save slot
+_08152F7C:  /* same loop for the second save slot */
 	adds r0, r4, 0
-	adds r0, 0xE  ; second save slot starts at flash block 0xE
+	adds r0, 0xE   /* second save slot starts at flash block 0xE  */
 	lsls r0, 24
 	lsrs r0, 24
 	ldr r1, [r7]
@@ -1098,7 +1098,7 @@ _08152FD0:
 	movs r1, 0xFF
 	cmp r6, r0
 	bne _0815300A
-	movs r1, 0x1  ; remember that the second save slot is valid
+	movs r1, 0x1  /* remember that the second save slot is valid */
 	b _0815300A
 	.pool
 _08153008:
@@ -1106,20 +1106,20 @@ _08153008:
 _0815300A:
 	ldr r0, [sp]
 	cmp r0, 0x1
-	bne _0815307C  ; jump if the first save slot was invalid
+	bne _0815307C  /* jump if the first save slot was invalid */
 	cmp r1, 0x1
-	bne _0815306C  ; jump if the second save slot was invalid
+	bne _0815306C  /* jump if the second save slot was invalid */
 	movs r0, 0x1
 	negs r0, r0
 	cmp r8, r0
-	bne _08153022  ; jump if save count of first slot is not -1...?
+	bne _08153022  /* jump if save count of first slot is not -1...? */
 	mov r1, r9
 	cmp r1, 0
 	beq _0815302C
 _08153022:
 	mov r2, r8
 	cmp r2, 0
-	bne _08153050  ; jump if save count of second slot is not -1...?
+	bne _08153050  /* jump if save count of second slot is not -1...? */
 	cmp r9, r0
 	bne _08153050
 _0815302C:
@@ -1139,19 +1139,19 @@ _08153044:
 	str r1, [r0]
 	b _08153094
 	.pool
-_08153050:  ; both slots contain valid saves
+_08153050:  /* both slots contain valid saves */
 	cmp r8, r9
-	bcs _08153060  ; jump if first slot is newer than second slot? (ie, we want to load first slot)
+	bcs _08153060  /* jump if first slot is newer than second slot? (ie, we want to load first slot) */
 	ldr r0, =gUnknown_03006200
 	mov r2, r9
-	str r2, [r0]  ; store into gUnknown_03006200 the save count of the save slot we want to load (which is the second slot)
+	str r2, [r0]  /* store into gUnknown_03006200 the save count of the save slot we want to load (which is the second slot) */
 	b _08153094
 	.pool
 _08153060:
 	ldr r0, =gUnknown_03006200
 	mov r3, r8
 _08153064:
-	str r3, [r0]  ; store into gUnknown_03006200 the save count of the save slot we want to load (which is the first slot)
+	str r3, [r0]  /* store into gUnknown_03006200 the save count of the save slot we want to load (which is the first slot) */
 	b _08153094
 	.pool
 _0815306C:
@@ -1280,7 +1280,7 @@ sub_815314C: @ 815314C
 	bx r1
 	thumb_func_end sub_815314C
 
-	thumb_func_start sub_8153164  ; calculate save block checksum
+	thumb_func_start sub_8153164  /* calculate save block checksum */
 sub_8153164: @ 8153164
 	push {r4,lr}
 	adds r4, r0, 0
@@ -1766,7 +1766,7 @@ _0815357C:
 _0815358C:
 	bl sub_8153190
 	ldr r0, =gUnknown_03006220
-	bl sub_8152EC8 ; determine which save slot is the newer one and store save count of it into gUnknown_03006200
+	bl sub_8152EC8 /* determine which save slot is the newer one and store save count of it into gUnknown_03006200 */
 	ldr r0, =gUnknown_03006200
 	ldr r1, [r0]
 	ands r1, r4
