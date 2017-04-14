@@ -33,18 +33,19 @@ _08152656:
 
 	thumb_func_start sub_8152680
 sub_8152680: @ 8152680
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* zero amount of times saved */
 	movs r1, 0
 	str r1, [r0]
-	ldr r0, =gUnknown_030061F0
+	ldr r0, =gUnknown_030061F0 /* zero save page shift */
 	strh r1, [r0]
-	ldr r0, =gUnknown_030061FC
+	ldr r0, =gUnknown_030061FC /* zero save sector failure bitfield */
 	str r1, [r0]
 	bx lr
 	.pool
 	thumb_func_end sub_8152680
 
-	thumb_func_start sub_815269C
+	/* r0 = 1 = set success, 0 = set failure, >1 check; r1 = flash sector id */
+	thumb_func_start sub_815269C /* check or set if a flash sector write was successful */
 sub_815269C: @ 815269C
 	push {r4,lr}
 	lsls r0, 24
@@ -53,43 +54,43 @@ sub_815269C: @ 815269C
 	lsrs r3, r1, 24
 	movs r4, 0
 	cmp r0, 0x1
-	beq _081526D0
+	beq _081526D0 /* if r0 == 1 */
 	cmp r0, 0x1
-	bgt _081526B6
+	bgt _081526B6 /* if r0 >  1 */
 	cmp r0, 0
-	beq _081526BC
-	b _081526F4
+	beq _081526BC /* if r0 == 0 */
+	b _081526F4   /* else */
 _081526B6:
 	cmp r0, 0x2
 	beq _081526E4
 	b _081526F4
-_081526BC:
+_081526BC: /* set the bit corresponding to the given save sector in gUnknown_030061FC (indicates error writing sector?) */
 	ldr r2, =gUnknown_030061FC
 	movs r1, 0x1
 	lsls r1, r3
 	ldr r0, [r2]
 	orrs r0, r1
 	str r0, [r2]
-	b _081526F4
+	b _081526F4 /* return 0 */
 	.pool
-_081526D0:
+_081526D0: /* clear the bit corresponding to the given save sector in gUnknown_030061FC (indicates no error writing sector?) */
 	ldr r2, =gUnknown_030061FC
 	adds r1, r0, 0
 	lsls r1, r3
 	ldr r0, [r2]
 	bics r0, r1
 	str r0, [r2]
-	b _081526F4
+	b _081526F4 /* return 0 */
 	.pool
-_081526E4:
+_081526E4: /* check the bit corresponding to the given save sector in gUnknown_030061FC */
 	ldr r0, =gUnknown_030061FC
 	movs r1, 0x1
 	lsls r1, r3
 	ldr r0, [r0]
 	ands r0, r1
 	cmp r0, 0
-	beq _081526F4
-	movs r4, 0x1
+	beq _081526F4  /* if bit is zero return 0 */
+	movs r4, 0x1 /* else return 1 */
 _081526F4:
 	adds r0, r4, 0
 	pop {r4}
@@ -136,21 +137,21 @@ _08152730:
 	str r4, [r6]
 	movs r5, 0x1
 	movs r4, 0
-_08152756:
+_08152756: /* loop for all 0xD sectors of save file */
 	adds r0, r4, 0
 	adds r1, r7, 0
-	bl sub_81527A0
+	bl sub_81527A0 /* does some stuff and writes flash sector... */
 	adds r0, r4, 0x1
 	lsls r0, 16
 	lsrs r4, r0, 16
 	cmp r4, 0xD
 	bls _08152756
-	ldr r0, =gUnknown_030061FC
+	ldr r0, =gUnknown_030061FC /* check if all flash sectors wrote cleanly */
 	ldr r0, [r0]
 	cmp r0, 0
-	beq _08152782
-	movs r5, 0xFF
-	ldr r1, =gUnknown_030061F0
+	beq _08152782 /* return 1 if successful */
+	movs r5, 0xFF /* return FF on failure */
+	ldr r1, =gUnknown_030061F0 /* and copy some values on failure...? */
 	ldr r0, =gUnknown_030061F8
 	ldrh r0, [r0]
 	strh r0, [r1]
@@ -166,7 +167,7 @@ _08152782:
 	.pool
 	thumb_func_end save_write_to_flash
 
-	thumb_func_start sub_81527A0
+	thumb_func_start sub_81527A0 /* write logical (unshifted) page r0 of save file */
 sub_81527A0: @ 81527A0
 	push {r4-r7,lr}
 	mov r7, r10
@@ -176,7 +177,7 @@ sub_81527A0: @ 81527A0
 	adds r4, r1, 0
 	lsls r0, 16
 	lsrs r6, r0, 16
-	ldr r0, =gUnknown_030061F0
+	ldr r0, =gUnknown_030061F0 /* check save page shift */
 	ldrh r0, [r0]
 	adds r0, r6, r0
 	lsls r0, 16
@@ -185,15 +186,15 @@ sub_81527A0: @ 81527A0
 	movs r1, 0xE
 	bl __umodsi3
 	lsls r0, 16
-	lsrs r5, r0, 16
-	ldr r2, =gUnknown_03006200
+	lsrs r5, r0, 16 /* remember physical save page (shifted) of current unshifted save page in r5 */
+	ldr r2, =gUnknown_03006200 /* check amount of times saved */
 	ldr r1, [r2]
 	movs r0, 0x1
-	ands r1, r0
-	lsls r0, r1, 3
+	ands r1, r0 /* determine if we should write to save 1 or save 2 based on times saved; r1 == 0 -> first save, r1 == 1 -> second save */
+	lsls r0, r1, 3 /* and then some math to figure out the physical flash sector of the save page and memory location of the source for the save page or something */
 	subs r0, r1
-	lsls r0, 1
-	adds r0, r5, r0
+	lsls r0, 1 /* put save start flash sector into r0, so either 0x0 for first save or 0xE for second save */
+	adds r0, r5, r0 /* then add the physical save page offset to get the flash sector number to write to */
 	lsls r0, 16
 	lsrs r5, r0, 16
 	lsls r0, r6, 3
@@ -203,12 +204,12 @@ sub_81527A0: @ 81527A0
 	ldrh r4, [r0, 0x4]
 	movs r3, 0
 	mov r9, r2
-	ldr r2, =gUnknown_03006204
+	ldr r2, =gUnknown_03006204 /* address of work buffer for save page */
 	mov r12, r2
 	mov r8, r12
 	movs r2, 0
 	ldr r1, =0x00000fff
-_081527F2:
+_081527F2: /* copy contents of data to be saved into work buffer??? */
 	mov r7, r8
 	ldr r0, [r7]
 	adds r0, r3
@@ -218,26 +219,26 @@ _081527F2:
 	lsrs r3, r0, 16
 	cmp r3, r1
 	bls _081527F2
-	mov r0, r12
+	mov r0, r12 /* then write save footer into work buffer */
 	ldr r1, [r0]
 	ldr r2, =0x00000ff4
 	adds r0, r1, r2
-	strh r6, [r0]
+	strh r6, [r0] /* write logical (unshifted) save page */
 	ldr r3, =0x00000ff8
 	adds r2, r1, r3
 	ldr r0, =0x08012025
-	str r0, [r2]
+	str r0, [r2] /* write magic number */
 	ldr r6, =0x00000ffc
 	adds r1, r6
 	mov r7, r9
 	ldr r0, [r7]
-	str r0, [r1]
+	str r0, [r1] /* write amount of times saved */
 	movs r3, 0
 	lsls r5, 24
 	cmp r3, r4
-	bcs _08152840
+	bcs _08152840 /* skip loop if size is zero or less...? */
 	mov r2, r12
-_0815282A:
+_0815282A: /* copy contents of data to be saved into work buffer again??? */
 	ldr r1, [r2]
 	adds r1, r3
 	mov r6, r10
@@ -252,15 +253,15 @@ _0815282A:
 _08152840:
 	mov r0, r10
 	adds r1, r4, 0
-	bl sub_8153164
+	bl sub_8153164 /* calculate checksum of save page */
 	ldr r1, =gUnknown_03006204
 	ldr r1, [r1]
 	ldr r7, =0x00000ff6
 	adds r2, r1, r7
-	strh r0, [r2]
+	strh r0, [r2] /* write checksum */
 	lsrs r0, r5, 24
-	bl sub_8152908
-	lsls r0, 24
+	bl sub_8152908 /* program flash sector and remember if it failed or not */
+	lsls r0, 24 /* and return the return value of sub_8152908 */
 	lsrs r0, 24
 	pop {r3-r5}
 	mov r8, r3
@@ -272,7 +273,7 @@ _08152840:
 	.pool
 	thumb_func_end sub_81527A0
 
-	thumb_func_start sub_8152890
+	thumb_func_start sub_8152890 /* write hall of fame page to save file? */
 sub_8152890: @ 8152890
 	push {r4-r7,lr}
 	adds r5, r1, 0
@@ -327,25 +328,26 @@ _081528D2:
 	.pool
 	thumb_func_end sub_8152890
 
-	thumb_func_start sub_8152908
+	/* r0 = sector number, r1 = pointer to data */
+	thumb_func_start sub_8152908 /* program flash sector and remember if it failed or not */
 sub_8152908: @ 8152908
 	push {r4,lr}
 	lsls r0, 24
 	lsrs r4, r0, 24
 	adds r0, r4, 0
-	bl ProgramFlashSectorAndVerify
+	bl ProgramFlashSectorAndVerify /* r0 truncated to 8 bits, otherwise called with same parameters as this function got */
 	cmp r0, 0
-	bne _08152924
+	bne _08152924 /* jump if programming flash failed */
 	movs r0, 0x1
 	adds r1, r4, 0
-	bl sub_815269C
-	movs r0, 0x1
+	bl sub_815269C /* remember that flash programming sector r1 succeeded */
+	movs r0, 0x1 /* return 1 */
 	b _0815292E
 _08152924:
 	movs r0, 0
 	adds r1, r4, 0
-	bl sub_815269C
-	movs r0, 0xFF
+	bl sub_815269C /* remember that flash programming sector r1 failed */
+	movs r0, 0xFF /* return FF */
 _0815292E:
 	pop {r4}
 	pop {r1}
@@ -1210,7 +1212,7 @@ _081530C4:
 	.pool
 	thumb_func_end sub_8152EC8
 
-	thumb_func_start sub_81530DC
+	thumb_func_start sub_81530DC /* load save sector and verify checksum? r0 = flash sector, r1 = target address? */
 sub_81530DC: @ 81530DC
 	push {r4-r6,lr}
 	adds r6, r1, 0
@@ -1265,7 +1267,7 @@ _08153146:
 	bx r1
 	thumb_func_end sub_81530DC
 
-	thumb_func_start sub_815314C
+	thumb_func_start sub_815314C /* params: r0 = sector number to read, r1 = destination address? */
 sub_815314C: @ 815314C
 	push {lr}
 	adds r2, r1, 0
@@ -1315,7 +1317,7 @@ sub_8153190: @ 8153190
 	ldr r0, =gSaveBlock2Ptr
 	ldr r2, =gUnknown_085CDC00
 	ldrh r1, [r2]
-	ldr r0, [r0]
+	ldr r0, [r0] /*0x02024A54*/
 	adds r0, r1
 	str r0, [r3]
 	ldrh r0, [r2, 0x2]
@@ -1362,7 +1364,7 @@ _081531D2:
 	.pool
 	thumb_func_end sub_8153190
 
-	thumb_func_start calls_flash_erase_block_3
+	thumb_func_start calls_flash_erase_block_3 /* save game after hall of fame? */
 calls_flash_erase_block_3: @ 8153204
 	push {r4-r6,lr}
 	lsls r0, 24
@@ -1721,15 +1723,15 @@ _08153528:
 	movs r0, 0x1C
 	adds r1, r5, 0
 	adds r2, r6, 0
-	bl sub_81530DC
+	bl sub_81530DC /* load save sector 0x1C (hall of fame) into memory starting at 0x0201C000 */
 	lsls r0, 24
 	lsrs r4, r0, 24
 	cmp r4, 0x1
-	bne _0815354E
+	bne _0815354E /* jump if loading hall of fame sector failed */
 	adds r1, r5, r6
 	movs r0, 0x1D
 	adds r2, r6, 0
-	bl sub_81530DC
+	bl sub_81530DC /* also load sector 0x1D into memory starting at 0x0201CF80; I'm guessing the HoF data split across two sectors! */
 	lsls r0, 24
 	lsrs r4, r0, 24
 _0815354E:
@@ -1752,41 +1754,41 @@ sub_815355C: @ 815355C
 	ldr r4, [r0]
 	cmp r4, 0x1
 	beq _0815358C
-	b _081535C8
+	b _081535C8 /* return 0 */
 	.pool
-_0815357C:
+_0815357C: /* load trainer ID from save...? */
 	ldrb r1, [r7, 0xA]
 	ldrb r0, [r7, 0xB]
 	adds r1, r0
 	ldrb r0, [r7, 0xC]
 	adds r1, r0
 	ldrb r0, [r7, 0xD]
-	adds r0, r1
+	adds r0, r1 /* return bytes of trainer ID added together? */
 	b _081535CA
 _0815358C:
-	bl sub_8153190
+	bl sub_8153190 /* inits some save globals or something...? */
 	ldr r0, =gUnknown_03006220
 	bl sub_8152EC8 /* determine which save slot is the newer one and store save count of it into gUnknown_03006200 */
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* read save slot number */
 	ldr r1, [r0]
-	ands r1, r4
+	ands r1, r4 /* determine if it's in slot 0 or slot 1 */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 17
-	lsrs r6, r0, 16
+	lsrs r6, r0, 16 /* put start sector of save slot into r6 */
 	movs r4, 0
-_081535A6:
+_081535A6: /* loop for all save pages to determine where logical page 0 is */
 	adds r0, r4, r6
 	lsls r0, 24
 	lsrs r0, 24
 	ldr r1, [r5]
-	bl sub_815314C
+	bl sub_815314C /* load page into buffer */
 	ldr r0, [r5]
 	ldr r1, =0x00000ff4
 	adds r0, r1
-	ldrh r0, [r0]
+	ldrh r0, [r0] /* check which logical save page this physical page is */
 	cmp r0, 0
-	beq _0815357C
+	beq _0815357C /* we found page 0! */
 	adds r0, r4, 0x1
 	lsls r0, 16
 	lsrs r4, r0, 16

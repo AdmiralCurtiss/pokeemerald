@@ -312,7 +312,7 @@ c2_copyright_1: @ 816CEAC
 	bl sub_8152680
 	movs r0, 0
 	bl sub_81534D0
-	ldr r0, =gUnknown_03006210
+	ldr r0, =gUnknown_03006210 /* check if save initialized? */
 	ldrh r0, [r0]
 	cmp r0, 0
 	beq _0816CEDE

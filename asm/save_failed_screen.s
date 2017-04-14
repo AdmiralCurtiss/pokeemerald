@@ -623,7 +623,7 @@ _0817954E:
 	bx r1
 	thumb_func_end sub_8179514
 
-	thumb_func_start sub_8179554
+	thumb_func_start sub_8179554 /* writes all zero to a page of flash; r0 = page (??) */
 sub_8179554: @ 8179554
 	push {r4-r7,lr}
 	mov r7, r8
@@ -668,7 +668,7 @@ _08179596:
 	.pool
 	thumb_func_end sub_8179554
 
-	thumb_func_start sub_81795AC
+	thumb_func_start sub_81795AC /* reinitialize save? seems to erase the entire save file to 0x00 */
 sub_81795AC: @ 81795AC
 	push {r4-r6,lr}
 	adds r5, r0, 0
@@ -690,14 +690,14 @@ _081795CC:
 	adds r0, r6, 0x1
 	lsls r0, 16
 	lsrs r6, r0, 16
-	cmp r6, 0x1F
+	cmp r6, 0x1F /* call whatever sub_8179554 does for all 0x20 save pages */
 	bls _081795B2
 	cmp r5, 0
 	beq _081795DE
-	movs r0, 0x1
+	movs r0, 0x1 /* returns 1 on failure? */
 	b _081795E0
 _081795DE:
-	movs r0, 0
+	movs r0, 0   /* returns 0 on success? */
 _081795E0:
 	pop {r4-r6}
 	pop {r1}

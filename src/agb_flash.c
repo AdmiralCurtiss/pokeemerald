@@ -135,6 +135,7 @@ void ReadFlash_Core(u8 *src, u8 *dest, u32 size)
     }
 }
 
+               // r0          r1          r2        r3
 void ReadFlash(u16 sectorNum, u32 offset, u8 *dest, u32 size)
 {
     u8 *src;

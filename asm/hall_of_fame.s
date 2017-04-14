@@ -418,17 +418,17 @@ sub_81738BC: @ 81738BC
 	.pool
 _081738EC:
 	movs r0, 0x3
-	bl sub_81534D0
+	bl sub_81534D0 /* read current hall of fame data from flash */
 	lsls r0, 24
 	lsrs r0, 24
 	cmp r0, 0x1
-	beq _08173906
-	movs r2, 0x80
+	beq _08173906 /* jump if reading was successful */
+	movs r2, 0x80 /* otherwise init hall of fame memory */
 	lsls r2, 6
 	adds r0, r7, 0
 	movs r1, 0
 	bl memset
-_08173906:
+_08173906: /* find free hall of fame slot (0x78 bytes each) */
 	movs r5, 0
 	ldrh r1, [r7, 0x8]
 	ldr r2, =0x000001ff
@@ -438,23 +438,23 @@ _08173906:
 	lsls r1, 2
 	mov r8, r1
 	cmp r0, 0
-	beq _08173930
+	beq _08173930 /* no need to loop if first slot is free, I think? */
 _0817391A:
 	adds r0, r5, 0x1
 	lsls r0, 16
 	lsrs r5, r0, 16
 	adds r7, 0x78
 	cmp r5, 0x31
-	bhi _08173934
+	bhi _08173934 /* jump if all 50 hall of fame slots filled or something? */
 	ldrh r1, [r7, 0x8]
 	adds r0, r2, 0
 	ands r0, r1
 	cmp r0, 0
-	bne _0817391A
-_08173930:
+	bne _0817391A /* current slot filled, try next */
+_08173930: /* we have a free slot in r5 maybe? */
 	cmp r5, 0x31
 	bls _08173956
-_08173934:
+_08173934: /* if all slots filled */
 	ldr r4, =0x0201c000
 	adds r6, r4, 0
 	adds r4, 0x78
@@ -472,12 +472,12 @@ _0817393E:
 	adds r4, 0x78
 	cmp r5, 0x30
 	bls _0817393E
-_08173956:
+_08173956: /* have a slot to fill hall of fame data into */
 	ldr r0, =gUnknown_0203BCD8
 	ldr r1, [r0]
 	adds r0, r7, 0
 	movs r2, 0x78
-	bl memcpy
+	bl memcpy /* copy hall of fame from game memory into save data buffer at found slot */
 	movs r0, 0
 	movs r1, 0
 	bl sub_81973C4
