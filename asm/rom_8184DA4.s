@@ -665,9 +665,9 @@ sub_81852F0: @ 81852F0
 	bl CalcByteArraySum
 	adds r4, r5, r4
 	str r0, [r4]
-	movs r0, 0x1F
+	movs r0, 0x1F /* select flash sector 0x1F */
 	adds r1, r5, 0
-	bl sub_8153634
+	bl sub_8153634 /* write battle recording to sector */
 	cmp r0, 0x1
 	bne _08185330
 	movs r0, 0x1
@@ -1471,13 +1471,13 @@ _08185A14:
 	.pool
 	thumb_func_end sub_8185338
 
-	thumb_func_start sub_8185A54
+	thumb_func_start sub_8185A54 /* read battle recording */
 sub_8185A54: @ 8185A54
 	push {r4,r5,lr}
 	adds r5, r0, 0
 	adds r4, r1, 0
 	movs r0, 0x1F
-	bl sub_81535DC
+	bl sub_81535DC /* read flash sector 0x1F (battle recording) */
 	cmp r0, 0x1
 	bne _08185A7E
 	movs r2, 0xF8
