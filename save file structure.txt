@@ -4,3 +4,15 @@ Block 0x1C -> Hall of Fame part 1.
 Block 0x1D -> Hall of Fame part 2.
 Block 0x1E -> Japanese version seems to use this for the e-Card data for Trainer Hill. Unused in International versions? 
 Block 0x1F -> Recorded battle.
+
+
+PLAN OF ACTION:
+ - Select a 64 KB flash.
+ - Stub bank switching. Panic if high bank is selected.
+ - Skip reading save slot 2, always claim it's older.
+ - Modify the mod 2 of save number to always select slot 1 on saving.
+ - Reduce hall of fame max to 32 slots (both on reading and writing).
+ - Read hall of fame in sector 0xE twice or stub second read.
+ - Write hall of fame in sector 0xE for the first half, stub the write for the second half.
+ - Stub trainer hill reading and writing.
+ - Read and write battle recordings to sector 0xF.
