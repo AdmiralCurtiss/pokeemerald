@@ -1577,7 +1577,7 @@ _08174308:
 	.pool
 	thumb_func_end sub_8174194
 
-	thumb_func_start sub_8174324
+	thumb_func_start sub_8174324 /* load hall of fame data? */
 sub_8174324: @ 8174324
 	push {r4-r6,lr}
 	sub sp, 0x4
@@ -1591,11 +1591,11 @@ sub_8174324: @ 8174324
 	movs r3, 0xC
 	bl sub_81980F0
 	movs r0, 0x3
-	bl sub_81534D0
+	bl sub_81534D0 /* read current hall of fame data from flash */
 	lsls r0, 24
 	lsrs r0, 24
 	cmp r0, 0x1
-	beq _08174364
+	beq _08174364 /* jump if read succeeded */
 	ldr r0, =gTasks
 	lsls r1, r6, 2
 	adds r1, r6
@@ -1619,8 +1619,8 @@ _08174364:
 	ands r0, r1
 	lsls r5, r6, 2
 	cmp r0, 0
-	beq _0817439A
-_08174384:
+	beq _0817439A /* jump if 1st slot empty */
+_08174384: /* loop until we find an empty slot or reach slot 50 */
 	adds r0, r2, 0x1
 	lsls r0, 16
 	lsrs r2, r0, 16
