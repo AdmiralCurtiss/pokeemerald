@@ -1,0 +1,6 @@
+Blocks 0x00-0x0D -> First save
+Blocks 0x0E-0x1B -> Second save
+Block 0x1C -> Hall of Fame part 1.
+Block 0x1D -> Hall of Fame part 2.
+Block 0x1E -> Japanese version seems to use this for the e-Card data for Trainer Hill. Unused in International versions? 
+Block 0x1F -> Recorded battle.

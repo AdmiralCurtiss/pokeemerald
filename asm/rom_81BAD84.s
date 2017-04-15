@@ -48160,15 +48160,15 @@ sub_81D3AB0: @ 81D3AB0
 	bx r1
 	thumb_func_end sub_81D3AB0
 
-	thumb_func_start sub_81D3AD8
+	thumb_func_start sub_81D3AD8 /* is called when Trainer Hill starts, right when the 'Go!' textbox closes */
 sub_81D3AD8: @ 81D3AD8
 	push {r4,r5,lr}
 	adds r5, r0, 0
 	adds r4, r1, 0
 	movs r0, 0x1E
-	bl sub_81535DC
+	bl sub_81535DC /* read flash sector 0x1E (Trainer Hill card e data?) */
 	cmp r0, 0x1
-	bne _081D3B04
+	bne _081D3B04 /* jump if reading failed (seems to happen always in US version, r0 == 0xFF) */
 	ldr r2, =0x00000ee8
 	adds r0, r5, 0
 	adds r1, r4, 0
