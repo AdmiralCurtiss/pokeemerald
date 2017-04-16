@@ -10,9 +10,40 @@ PLAN OF ACTION:
  - Select a 64 KB flash.
  - Stub bank switching. Panic if high bank is selected.
  - Skip reading save slot 2, always claim it's older.
- - Modify the mod 2 of save number to always select slot 1 on saving.
+ - Modify the mod 2 of save number to always select slot 1 on saving. (Search for gUnknown_03006200)
  - Reduce hall of fame max to 32 slots (both on reading and writing).
  - Read hall of fame in sector 0xE twice or stub second read.
  - Write hall of fame in sector 0xE for the first half, stub the write for the second half.
  - Stub trainer hill reading and writing.
  - Read and write battle recordings to sector 0xF.
+
+ 
+Change FLASH1M_V103 to FLASH512_V131 in output file, some emulators need this for autodetection of save type.
+
+To stub the bank switching & panic on high bank put the following data at 0x02E1860: 00 28 08 D0 FE E7 C0 46 C0 46 C0 46 C0 46 C0 46 C0 46 C0 46 C0 46
+
+Corresponds to ASM code:
+	[unchanged lsl/lsr of SwitchFlashBank]
+	cmp r0, #0
+	beq ._SWITCHBANKEND
+._SWITCHBANKPANIC:
+	b ._SWITCHBANKPANIC
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+._SWITCHBANKEND:
+	[unchanged bx of SwitchFlashBank]
+
+In other words, we intentionally hang if someone selects a non-0 bank, and just return otherwise.
+
+Checksums of result:
+CRC32: 8AC0DBE1
+MD5: 59f5c1a16a78c7cf5e9f0ed8e0f09741
+SHA1: 73fbd426c117a3c5f4b180d648888c19a5d4c19e
+SHA256: 65c20a483a85382b23e05f777b70076b5ba145b6b32fc5ca2df008d8719722bc
+SHA512: 82193d81c9c494c9c7a8d0e7e64af24bfb74acc7b22a1c92ce53f3c37c0d463477af6867f20be7557af3d58dca413e1ddf71670ed6eca8be85f69ef0ad83960d

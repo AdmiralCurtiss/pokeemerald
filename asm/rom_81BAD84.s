@@ -48124,7 +48124,9 @@ _081D3A7E:
 	str r0, [r2, 0x4]
 	movs r0, 0x1E
 	mov r1, r8
-	bl sub_8153634 /* write trainer hill e data to flash, guessing this is never called in international version? */
+	/* bl sub_8153634 */ /* write trainer hill e data to flash, guessing this is never called in international version? */
+	movs r0, 0xFF /* this should never happen anyway but stub this write too, just in case, claim it failed */
+	nop
 	cmp r0, 0x1
 	bne _081D3AA4
 	movs r0, 0x1
@@ -48166,7 +48168,9 @@ sub_81D3AD8: @ 81D3AD8
 	adds r5, r0, 0
 	adds r4, r1, 0
 	movs r0, 0x1E
-	bl sub_81535DC /* read flash sector 0x1E (Trainer Hill card e data?) */
+	/* bl sub_81535DC */ /* read flash sector 0x1E (Trainer Hill card e data?) */
+	movs r0, 0xFF /* claim read failed */
+	nop /* pad for size */
 	cmp r0, 0x1
 	bne _081D3B04 /* jump if reading failed (seems to happen always in US version, r0 == 0xFF) */
 	ldr r2, =0x00000ee8

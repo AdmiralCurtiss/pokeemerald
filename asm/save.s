@@ -124,17 +124,17 @@ _08152730:
 	ldrh r0, [r5]
 	strh r0, [r1]
 	ldr r1, =gUnknown_030061F4
-	ldr r6, =gUnknown_03006200
+	ldr r6, =gUnknown_03006200 /* save shift determine */
 	ldr r4, [r6]
 	str r4, [r1]
-	adds r0, 0x1
+	adds r0, 0x1 /* increment save page shift */
 	strh r0, [r5]
 	ldrh r0, [r5]
-	movs r1, 0xE
+	movs r1, 0xE /* mod E to put save page shift into valid range */
 	bl __umodsi3
 	strh r0, [r5]
-	adds r4, 0x1
-	str r4, [r6]
+	adds r4, 0x1 /* increment save counter */
+	str r4, [r6] /* save in gUnknown_03006200 */
 	movs r5, 0x1
 	movs r4, 0
 _08152756: /* loop for all 0xD sectors of save file */
@@ -155,7 +155,7 @@ _08152756: /* loop for all 0xD sectors of save file */
 	ldr r0, =gUnknown_030061F8
 	ldrh r0, [r0]
 	strh r0, [r1]
-	ldr r1, =gUnknown_03006200
+	ldr r1, =gUnknown_03006200 /* restore previous save counter on save fail */
 	ldr r0, =gUnknown_030061F4
 	ldr r0, [r0]
 	str r0, [r1]
@@ -187,10 +187,11 @@ sub_81527A0: @ 81527A0
 	bl __umodsi3
 	lsls r0, 16
 	lsrs r5, r0, 16 /* remember physical save page (shifted) of current unshifted save page in r5 */
-	ldr r2, =gUnknown_03006200 /* check amount of times saved */
+	ldr r2, =gUnknown_03006200 /* modified to always pick first slot */ /* check amount of times saved */
 	ldr r1, [r2]
 	movs r0, 0x1
-	ands r1, r0 /* determine if we should write to save 1 or save 2 based on times saved; r1 == 0 -> first save, r1 == 1 -> second save */
+	/* ands r1, r0 */ /* determine if we should write to save 1 or save 2 based on times saved; r1 == 0 -> first save, r1 == 1 -> second save */
+	movs r1, 0 /* !always save to first save slot */
 	lsls r0, r1, 3 /* and then some math to figure out the physical flash sector of the save page and memory location of the source for the save page or something */
 	subs r0, r1
 	lsls r0, 1 /* put save start flash sector into r0, so either 0x0 for first save or 0xE for second save */
@@ -501,10 +502,11 @@ calls_flash_erase_block_2: @ 8152A80
 	bl __umodsi3
 	lsls r0, 16
 	lsrs r5, r0, 16
-	ldr r2, =gUnknown_03006200
+	ldr r2, =gUnknown_03006200 /* modified to always pick first slot */
 	ldr r1, [r2]
 	movs r0, 0x1
-	ands r1, r0
+	/* ands r1, r0 */
+	movs r1, 0 /* always pick first save slot */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 1
@@ -682,10 +684,11 @@ sav12_xor_get: @ 8152C20
 	bl __umodsi3
 	lsls r0, 16
 	lsrs r4, r0, 16
-	ldr r5, =gUnknown_03006200
+	ldr r5, =gUnknown_03006200 /* modified to always pick first slot */
 	ldr r1, [r5]
 	movs r0, 0x1
-	ands r1, r0
+	/* ands r1, r0 */
+	movs r1, 0 /* always pick first save slot */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 1
@@ -743,10 +746,11 @@ sub_8152CAC: @ 8152CAC
 	bl __umodsi3
 	lsls r0, 16
 	lsrs r4, r0, 16
-	ldr r5, =gUnknown_03006200
+	ldr r5, =gUnknown_03006200 /* modified to always pick first slot */
 	ldr r1, [r5]
 	movs r0, 0x1
-	ands r1, r0
+	/* ands r1, r0 */
+	movs r1, 0 /* always pick first save slot */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 1
@@ -807,10 +811,11 @@ sub_8152D44: @ 8152D44
 	bl __umodsi3
 	lsls r0, 16
 	lsrs r4, r0, 16
-	ldr r5, =gUnknown_03006200
+	ldr r5, =gUnknown_03006200 /* modified to always pick first slot */
 	ldr r1, [r5]
 	movs r0, 0x1
-	ands r1, r0
+	/* ands r1, r0 */
+	movs r1, 0 /* always pick first save slot */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 1
@@ -888,10 +893,11 @@ sub_8152E10: @ 8152E10
 	mov r7, r8
 	push {r7}
 	mov r8, r1
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* modified to always pick first slot */
 	ldr r1, [r0]
 	movs r0, 0x1
-	ands r1, r0
+	/* ands r1, r0 */
+	movs r1, 0 /* always pick first save slot */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 17
@@ -1048,11 +1054,16 @@ _08152F74:
 	movs r4, 0
 	ldr r7, =gUnknown_03006204
 _08152F7C:  /* same loop for the second save slot */
-	adds r0, r4, 0
-	adds r0, 0xE   /* second save slot starts at flash block 0xE  */
-	lsls r0, 24
-	lsrs r0, 24
-	ldr r1, [r7]
+	/* adds r0, r4, 0 */
+	/* adds r0, 0xE */  /* second save slot starts at flash block 0xE  */
+	/* lsls r0, 24 */
+	/* lsrs r0, 24 */
+	/* ldr r1, [r7] */
+	mov r0, r8 /* !copy save number from first slot */
+	subs r0, 1 /* !decrement it */
+	mov r9, r0 /* !and store it where the game expects the save number of the second slot */
+	ldr r1, [sp] /* !claim that the second save slot has the same validity as the first */
+	b _0815300A /* !skip the loop for the second save slot */
 	bl sub_815314C
 	ldr r2, [r7]
 	ldr r1, =0x00000ff8
@@ -1131,12 +1142,12 @@ _0815302C:
 	adds r0, 0x1
 	cmp r1, r0
 	bcs _08153044
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	mov r3, r9
 	b _08153064
 	.pool
 _08153044:
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	mov r1, r8
 	str r1, [r0]
 	b _08153094
@@ -1144,20 +1155,20 @@ _08153044:
 _08153050:  /* both slots contain valid saves */
 	cmp r8, r9
 	bcs _08153060  /* jump if first slot is newer than second slot? (ie, we want to load first slot) */
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	mov r2, r9
 	str r2, [r0]  /* store into gUnknown_03006200 the save count of the save slot we want to load (which is the second slot) */
 	b _08153094
 	.pool
 _08153060:
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	mov r3, r8
 _08153064:
 	str r3, [r0]  /* store into gUnknown_03006200 the save count of the save slot we want to load (which is the first slot) */
 	b _08153094
 	.pool
 _0815306C:
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	mov r2, r8
 	str r2, [r0]
 	cmp r1, 0xFF
@@ -1167,7 +1178,7 @@ _0815306C:
 _0815307C:
 	cmp r1, 0x1
 	bne _08153098
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	mov r3, r9
 	str r3, [r0]
 	ldr r0, [sp]
@@ -1186,7 +1197,7 @@ _08153098:
 	bne _081530B8
 	cmp r1, 0
 	bne _081530B8
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	str r1, [r0]
 	ldr r0, =gUnknown_030061F0
 	strh r1, [r0]
@@ -1194,7 +1205,7 @@ _08153098:
 	b _081530C4
 	.pool
 _081530B8:
-	ldr r0, =gUnknown_03006200
+	ldr r0, =gUnknown_03006200 /* during save slot validity/to-load check function */
 	movs r1, 0
 	str r1, [r0]
 	ldr r0, =gUnknown_030061F0
@@ -1391,7 +1402,7 @@ _0815322C:
 	.4byte _081532F8
 	.4byte _08153244
 _08153244:
-	movs r4, 0x1C
+	movs r4, 0xE /* only erase sector 0xE (new hall of fame location) whenever this code runs (how do you get here?) */
 	ldr r5, =EraseFlashSector
 _08153248:
 	ldr r1, [r5]
@@ -1400,8 +1411,9 @@ _08153248:
 	adds r0, r4, 0x1
 	lsls r0, 24
 	lsrs r4, r0, 24
-	cmp r4, 0x1F
-	bls _08153248
+	/* this looped for a few sectors, removed the loop since we only write to sector E now */
+	nop /* cmp r4, 0x1F */
+	nop /* bls _08153248 */
 _0815325A:
 	movs r0, 0xA
 	bl sub_80847F8
@@ -1418,7 +1430,8 @@ _0815326C:
 	ldr r4, =0x0201c000
 	movs r5, 0xF8
 	lsls r5, 4
-	movs r0, 0x1C
+	/* movs r0, 0x1C */
+	movs r0, 0xE /* save hall of fame to sector 0xE instead */
 	adds r1, r4, 0
 	adds r2, r5, 0
 	bl sub_8152890
@@ -1426,7 +1439,9 @@ _0815326C:
 	movs r0, 0x1D
 	adds r1, r4, 0
 	adds r2, r5, 0
-	bl sub_8152890
+	/* bl sub_8152890 */
+	nop /* and don't save the second part at all */
+	nop
 	b _0815331A
 	.pool
 _081532AC:
@@ -1461,7 +1476,7 @@ _081532DE:
 	b _0815331A
 	.pool
 _081532F8:
-	movs r4, 0x1C
+	movs r4, 0xE /* same as above, only erase sector 0xE (new hall of fame location) whenever this code runs (how do you get here?) */
 	ldr r5, =EraseFlashSector
 _081532FC:
 	ldr r1, [r5]
@@ -1470,8 +1485,9 @@ _081532FC:
 	adds r0, r4, 0x1
 	lsls r0, 24
 	lsrs r4, r0, 24
-	cmp r4, 0x1F
-	bls _081532FC
+	/* same as above */
+	nop /* cmp r4, 0x1F */
+	nop /* bls _081532FC */
 	bl save_serialize_game
 	ldr r0, =0x0000ffff
 	ldr r1, =gUnknown_03006220
@@ -1720,7 +1736,8 @@ _08153528:
 	ldr r5, =0x0201c000
 	movs r6, 0xF8
 	lsls r6, 4
-	movs r0, 0x1C
+	/* movs r0, 0x1C */
+	movs r0, 0xE /* hall of fame is in sector 0xE now */
 	adds r1, r5, 0
 	adds r2, r6, 0
 	bl sub_81530DC /* load save sector 0x1C (hall of fame) into memory starting at 0x0201C000 */
@@ -1728,12 +1745,17 @@ _08153528:
 	lsrs r4, r0, 24
 	cmp r4, 0x1
 	bne _0815354E /* jump if loading hall of fame sector failed */
-	adds r1, r5, r6
-	movs r0, 0x1D
-	adds r2, r6, 0
-	bl sub_81530DC /* also load sector 0x1D into memory starting at 0x0201CF80; I'm guessing the HoF data split across two sectors! */
-	lsls r0, 24
-	lsrs r4, r0, 24
+	/* adds r1, r5, r6 */
+	/* movs r0, 0x1D */
+	adds r0, r5, r6 /* pointer to memory */
+	movs r1, 0 /* value to fill */
+	adds r2, r6, 0 /* length, happens to be unchanged */
+	/* bl sub_81530DC */ /* also load sector 0x1D into memory starting at 0x0201CF80; I'm guessing the HoF data split across two sectors! */
+	bl memset /* fill second half with zero instead of reading from save file */
+	/* lsls r0, 24 */
+	/* lsrs r4, r0, 24 */
+	movs r0, 0x1 /* mock return value of sub_81530DC to claim success reading */
+	movs r4, r0 /* and put it where the following line expects it */
 _0815354E:
 	adds r0, r4, 0
 _08153550:
@@ -1771,7 +1793,8 @@ _0815358C:
 	bl sub_8152EC8 /* determine which save slot is the newer one and store save count of it into gUnknown_03006200 */
 	ldr r0, =gUnknown_03006200 /* read save slot number */
 	ldr r1, [r0]
-	ands r1, r4 /* determine if it's in slot 0 or slot 1 */
+	/* ands r1, r4 */ /* determine if it's in slot 0 or slot 1 */
+	movs r1, 0 /* always pick first slot */
 	lsls r0, r1, 3
 	subs r0, r1
 	lsls r0, 17
@@ -1813,8 +1836,10 @@ sub_81535DC: @ 81535DC
 	lsls r2, 24
 	adds r0, r2
 	lsrs r0, 24
-	cmp r0, 0x1
-	bhi _08153608
+	/* cmp r0, 0x1 */
+	/* bhi _08153608 */
+	cmp r0, 0xF1 /* this seems like some odd sanity check, modify that so it works with our new sector location */
+	bne _08153608
 	ldr r4, =gUnknown_0203ABBC
 	movs r3, 0x80
 	lsls r3, 5
@@ -1860,8 +1885,10 @@ sub_8153634: @ 8153634
 	lsls r1, 24
 	adds r0, r1
 	lsrs r0, 24
-	cmp r0, 0x1
-	bhi _08153680
+	/* cmp r0, 0x1 */
+	/* bhi _08153680 */
+	cmp r0, 0xF1 /* this seems like some odd sanity check, modify that so it works with our new sector location */
+	bne _08153680
 	ldr r7, =gUnknown_0203ABBC
 	ldr r0, =0x0000b39d
 	adds r3, r7, 0

@@ -444,7 +444,8 @@ _0817391A:
 	lsls r0, 16
 	lsrs r5, r0, 16
 	adds r7, 0x78
-	cmp r5, 0x31
+	/* cmp r5, 0x31 */
+	cmp r5, 0x1F /* we only use 32 slots now */
 	bhi _08173934 /* jump if all 50 hall of fame slots filled or something? */
 	ldrh r1, [r7, 0x8]
 	adds r0, r2, 0
@@ -452,7 +453,8 @@ _0817391A:
 	cmp r0, 0
 	bne _0817391A /* current slot filled, try next */
 _08173930: /* we have a free slot in r5 maybe? */
-	cmp r5, 0x31
+	/* cmp r5, 0x31 */
+	cmp r5, 0x1F /* we only use 32 slots now */
 	bls _08173956
 _08173934: /* if all slots filled */
 	ldr r4, =0x0201c000
@@ -1625,7 +1627,8 @@ _08174384: /* loop until we find an empty slot or reach slot 50 */
 	lsls r0, 16
 	lsrs r2, r0, 16
 	adds r4, 0x78
-	cmp r2, 0x31
+	/* cmp r2, 0x31 */
+	cmp r2, 0x1F /* we only have 32 slots now */
 	bhi _081743BC
 	ldrh r1, [r4, 0x8]
 	adds r0, r3, 0
@@ -1633,7 +1636,8 @@ _08174384: /* loop until we find an empty slot or reach slot 50 */
 	cmp r0, 0
 	bne _08174384
 _0817439A:
-	cmp r2, 0x31
+	/* cmp r2, 0x31 */
+	cmp r2, 0x1F /* we only have 32 slots now */
 	bhi _081743BC
 	ldr r0, =gTasks
 	adds r1, r5, r6
@@ -1647,7 +1651,8 @@ _081743BC:
 	adds r1, r5, r6
 	lsls r1, 3
 	adds r1, r0
-	movs r0, 0x31
+	/* movs r0, 0x31 */
+	movs r0, 0x1F /* is this also the slot count...? i think so, not sure though */
 _081743C6:
 	strh r0, [r1, 0x8]
 	movs r0, 0xA

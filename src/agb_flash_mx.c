@@ -18,15 +18,15 @@ const struct FlashSetupInfo MX29L010 =
     WaitForFlashWrite_Common,
     mxMaxTime,
     {
-        131072, // ROM size
+        65536, // ROM size
         {
             4096, // sector size
               12, // bit shift to multiply by sector size (4096 == 1 << 12)
-              32, // number of sectors
+              16, // number of sectors
                0  // appears to be unused
         },
         { 3, 1 }, // wait state setup data
-        { { 0xC2, 0x09 } } // ID
+        { { 0xBF, 0xD4 } } // ID
     }
 };
 
@@ -39,11 +39,11 @@ const struct FlashSetupInfo DefaultFlash =
     WaitForFlashWrite_Common,
     mxMaxTime,
     {
-        131072, // ROM size
+        65536, // ROM size
         {
             4096, // sector size
               12, // bit shift to multiply by sector size (4096 == 1 << 12)
-              32, // number of sectors
+              16, // number of sectors
                0  // appears to be unused
         },
         { 3, 1 }, // wait state setup data

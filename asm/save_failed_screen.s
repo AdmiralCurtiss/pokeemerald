@@ -690,7 +690,7 @@ _081795CC:
 	adds r0, r6, 0x1
 	lsls r0, 16
 	lsrs r6, r0, 16
-	cmp r6, 0x1F /* call whatever sub_8179554 does for all 0x20 save pages */
+	cmp r6, 0xF /* call whatever sub_8179554 does for all 0x20 save pages */
 	bls _081795B2
 	cmp r5, 0
 	beq _081795DE
