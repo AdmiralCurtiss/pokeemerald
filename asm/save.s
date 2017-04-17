@@ -968,7 +968,7 @@ _08152E98:
 	thumb_func_end sub_8152E10
 
 	thumb_func_start sub_8152EC8  /* called on game init, checks if the save files are valid (and possibly more?) */
-sub_8152EC8: @ 8152EC8
+sub_8152EC8: @ 8152EC8 /* should return 0 when no save present, 1 when save present and valid, >=2 when save present but broken (exact meanings unsure) */
 	push {r4-r7,lr}
 	mov r7, r10
 	mov r6, r9
