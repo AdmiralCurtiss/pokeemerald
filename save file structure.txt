@@ -47,3 +47,71 @@ MD5: 59f5c1a16a78c7cf5e9f0ed8e0f09741
 SHA1: 73fbd426c117a3c5f4b180d648888c19a5d4c19e
 SHA256: 65c20a483a85382b23e05f777b70076b5ba145b6b32fc5ca2df008d8719722bc
 SHA512: 82193d81c9c494c9c7a8d0e7e64af24bfb74acc7b22a1c92ce53f3c37c0d463477af6867f20be7557af3d58dca413e1ddf71670ed6eca8be85f69ef0ad83960d
+
+
+
+Tech details:
+
+The game stores the current number of saves in 0x03006200 and does a mod 2 on it to figure out if the current save is in slot 0 or 1. I modified those calculations to always select slot 0, even though I'm not entirely sure what some of the functions are used for.
+
+1x @ 0x81527CC -> Always select the first save slot when determining the slot to write to.
+1x @ 0x8152AAC -> Always select the first save slot in this undetermined function.
+1x @ 0x8152C42 -> Always select the first save slot in this undetermined function.
+1x @ 0x8152CD0 -> Always select the first save slot in this undetermined function.
+1x @ 0x8152D68 -> Always select the first save slot in this undetermined function.
+1x @ 0x8152E1E -> Always select the first save slot in this undetermined function.
+
+On game init, the game reads both save slot, determines which of them are valid and which one is newer then the other (via the save counter).
+
+5x @ 0x8152F7C -> The read of the second save slot has been replaced to always report that the second slot is the same validity as the first slot (so you still get correct system messages for corruption and stuff), and that the second slot is always one save older than the first slot, so the game will never pick it when deciding which slot to load.
+
+After the Elite 4, the game calls a special function to save the game and record the current team in the Hall of Fame. Normally, the Hall of Fame occupies two sectors of flash memory, 0x1C and 0x1D, and stores a maximum of 50 teams. With a 512K flash, we only have two spare sectors for extra data, and we still need a place to hold the recorded battles from the Battle Frontier, so I've modified the Hall of Fame reads and writes to only store 32 teams and only use one flash sector, 0x0E.
+
+1x @ 0x8153244, 2x @ 0x8153256 -> When Hall of Fame data has to be erased for whatever reason, only erase sector 0xE.
+1x @ 0x815327E -> Save the first half of the Hall of Fame to sector 0xE instead of 0x1C.
+2x @ 0x8153290 -> Remove the write to sector 0x1D. By limiting the Hall of Fame to 32 teams, the second half is always empty and doesn't need to be written.
+1x @ 0x81532F8, 2x @ 0x815330A -> Again, when Hall of Fame data has to be erased for whatever reason, only erase sector 0xE.
+2x @ 0x815352E -> Load the first half of the Hall of Fame from sector 0xE instead of 0x1C.
+7x @ 0x8153540 -> memset the second half of the Hall of Fame to 0 instead of reading it from sector 0x1D.
+
+1x @ 0x815359A -> Always select the first save slot in this undetermined function.
+
+The Battle Frontier battle recording usually saves to sector 0x1F. I remapped it to sector 0xF.
+
+2x @ 0x81535EC -> This seems like a sanity check that determines if the requested sector is either 0x1E or 0x1F and returns from the function with failure if it's not. Since 0xF is outside that range, I modified the check to just check for sector 0xF.
+2x @ 0x8153644 -> Same sanity check.
+
+1x @ 0x8173922 -> Change the maximum amount of saved hall of fame records from 50 to 32.
+1x @ 0x8173930 -> Same as above.
+1x @ 0x817438C -> Change the maximum amount of loaded hall of fame records from 50 to 32.
+1x @ 0x817439A -> Same as above.
+1x @ 0x81743C4 -> Same as above.
+
+1x @ 0x81795D2 -> Modify function that (re?)initializes the entire save file to only write to 0x10 sectors we now have instead of the 0x20 sectors we had.
+
+1x @ 0x818531C -> Write to sector 0xF instead of 0x1F for the Battle Frontier's battle recording.
+1x @ 0x8185A58 -> Read from sector 0xF instead of 0x1F for the Battle Frontier's battle recording.
+
+In the Japanese version of the game, the Trainer Hill on Route 111 worked by scanning e-Cards that modified the trainer setups and floor layouts of the tower. The data for the currently scanned cards was stored in Flash sector 0x1E. In the International versions of the game, the Trainer Hill was modified to just contain a few pre-set layouts, so Flash sector 0x1E seems to be unused in those versions. Just in case, I've dummied out the leftover reads and writes to that sector.
+
+2x @ 0x81D3A92 -> If, somehow, the Trainer Hill save write function is ever called, don't call the flash write function and just claim the write failed.
+2x @ 0x81D3AE0 -> Likewise, if the Trainer Hill save read function is called, don't call the flash read and just claim the read failed. This one is actually still called when Trainer Hill starts in the English version, but of course doesn't actually seem to do anything.
+
+Access to Flash memory:
+
+Bx @ 0x82E1860 -> Completely rewrite SwitchFlashBank. It now does nothing if bank 0 is selected, but hangs the game when a higher bank is selected, so we can figure out if we missed a place where the save file is accessed. This also serves as a protection for writes that would hit flash bank 1, since on devices/emulators that don't understand flash banks they would hit bank 0 and corrupt the data in it.
+1x @ 0x82E1AF8 -> ReadFlash checks for a 1M Flash size before calling SwitchFlashBank. This check has been modified so that SwitchFlashBank is still called for the 512K Flash.
+1x @ 0x82E1BC0 -> Same as above for VerifyFlashSector.
+1x @ 0x82E1C4C -> Same as above for VerifyFlashSectorNBytes.
+Note that the Program and Erase functions always call SwitchFlashBank regardless of Flash size, probably because they're supposed to be flash type specific.
+
+Finally, I modified the Flash identification string at 0x89A30C0 to claim a 512K flash (I suspect these are unused on actual hardware, but some emulators use them to detect save type), and modified and a few flash IDs and sizes below that to match the data a real 512K GBA flash memory would have.
+
+If the device or emulator you're using this patch on does not save or boot correctly, you can try modifying the known Flash IDs, which are two bytes each at 0x9A3148 and 0x9A31E0. Reference the table at http://problemkaputt.de/gbatek.htm#gbacartbackupflashrom for valid IDs. As a last resort, you can also change the 0x03 at 0x82E1D94 to a 0x02, which changes the IdentifyFlash function to report flash identification success even though the ID wasn't recognized, though I have no idea if that actually works.
+
+
+
+
+
+
+
