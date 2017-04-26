@@ -112,6 +112,14 @@ If the device or emulator you're using this patch on does not save or boot corre
 
 
 
+0x82E1D8C: 00 29 02 D1 14 3A 01 24 03 E0
+changes the 'flash chip unknown' cancel reason from 'maker is 0' to 'nullptr encountered'
+cmp r1,0h    // if not nullptr
+bne 82E1D96h // continue loop as normal
+sub r2,14h   // else select the info of the first flash chip
+mov r4,1h    // report failure
+b   92E1D9Eh // and break out of loop
+
 
 
 

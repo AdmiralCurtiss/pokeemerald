@@ -10,10 +10,13 @@ const struct FlashSetupInfo * const sSetupInfos512[] =
 {
     (const struct FlashSetupInfo * const)0x08152F88, // 64k SST
     (const struct FlashSetupInfo * const)0x08152FB8, // 64k Macronix
-    &MX29L010,
-    &LE26FV10N1TS,
-    &DefaultFlash,
-    0
+    &DefaultFlash, // repurposed for 64k Panasonic
+    &MX29L010,     // 128k Macronix
+    &LE26FV10N1TS, // 128k Sanyo
+    0              // intentionally 0, indicates end of known flash chips
+    // technically there's one more flash chip, the 64k Atmel, but that one has odd
+    // characteristics that would need to be handled differently than all other chips,
+    // so I've chosen to not support it
 };
 
 const struct FlashSetupInfo LE26FV10N1TS =
