@@ -1,12 +1,19 @@
 #include "gba/gba.h"
 #include "gba/flash_internal.h"
 
-const u16 leMaxTime[] =
+extern const u16 mxMaxTime[];
+extern const struct FlashSetupInfo MX29L010;
+extern const struct FlashSetupInfo LE26FV10N1TS;
+extern const struct FlashSetupInfo DefaultFlash;
+
+const struct FlashSetupInfo * const sSetupInfos512[] =
 {
-      10, 65469, TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_256CLK,
-      10, 65469, TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_256CLK,
-    2000, 65469, TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_256CLK,
-    2000, 65469, TIMER_ENABLE | TIMER_INTR_ENABLE | TIMER_256CLK,
+    0,
+    0,
+    0,
+    &MX29L010,
+    &LE26FV10N1TS,
+    &DefaultFlash
 };
 
 const struct FlashSetupInfo LE26FV10N1TS =
@@ -16,7 +23,7 @@ const struct FlashSetupInfo LE26FV10N1TS =
     EraseFlashChip_MX,
     EraseFlashSector_MX,
     WaitForFlashWrite_Common,
-    leMaxTime,
+    mxMaxTime,
     {
         131072, // ROM size
         {

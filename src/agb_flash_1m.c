@@ -3,6 +3,8 @@
 
 static const char AgbLibFlashVersion[] = "FLASH1M_V103";
 
+extern const struct FlashSetupInfo * const sSetupInfos512[];
+
 const struct FlashSetupInfo * const sSetupInfos[] =
 {
     &MX29L010,
@@ -20,7 +22,7 @@ u16 IdentifyFlash(void)
 
     flashId = ReadFlashId();
 
-    setupInfo = sSetupInfos;
+    setupInfo = sSetupInfos512;
     result = 1;
 
     for (;;)
