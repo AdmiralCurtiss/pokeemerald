@@ -5,7 +5,7 @@
 
 #define FLASH_WRITE(addr, data) ((*(vu8 *)(FLASH_BASE + (addr))) = (data))
 
-#define FLASH_ROM_SIZE_1M 65536 // 1 megabit ROM
+#define FLASH_ROM_SIZE_1M 67108864 // claim 64 megabyte flash memory, which is nonsense; basically we just need a power of two that can't possibly be ever correct here
 
 #define SECTORS_PER_BANK 16
 
