@@ -8,12 +8,12 @@ extern const struct FlashSetupInfo DefaultFlash;
 
 const struct FlashSetupInfo * const sSetupInfos512[] =
 {
-    0,
-    0,
-    0,
+    (const struct FlashSetupInfo * const)0x08152F88, // 64k SST
+    (const struct FlashSetupInfo * const)0x08152FB8, // 64k Macronix
     &MX29L010,
     &LE26FV10N1TS,
-    &DefaultFlash
+    &DefaultFlash,
+    0
 };
 
 const struct FlashSetupInfo LE26FV10N1TS =

@@ -1064,6 +1064,7 @@ _08152F7C:  /* same loop for the second save slot */
 	mov r9, r0 /* !and store it where the game expects the save number of the second slot */
 	ldr r1, [sp] /* !claim that the second save slot has the same validity as the first */
 	b _0815300A /* !skip the loop for the second save slot */
+/*
 	bl sub_815314C
 	ldr r2, [r7]
 	ldr r1, =0x00000ff8
@@ -1111,9 +1112,51 @@ _08152FD0:
 	movs r1, 0xFF
 	cmp r6, r0
 	bne _0815300A
-	movs r1, 0x1  /* remember that the second save slot is valid */
+	movs r1, 0x1 */ /* remember that the second save slot is valid */
+/* we need an extra block of memory for additional possible flash chip identification structs
+   and this is the best place to put them, since this whole loop isn't used anymore
+   putting it here also pretty much assures that no other hack this patch could possibly be applied to uses this space
+ */
+	nop /* align to 4 bytes */
+	/* flash chip identification for 64k SST */
+	.byte 0xE1, 0x1F, 0x2E, 0x08 /* pointer to ProgramFlashByte_MX */
+	.byte 0xAD, 0x20, 0x2E, 0x08 /* pointer to ProgramFlashSector_MX */
+	.byte 0x9D, 0x1E, 0x2E, 0x08 /* pointer to EraseFlashChip_MX */
+	.byte 0x11, 0x1F, 0x2E, 0x08 /* pointer to EraseFlashSector_MX */
+	.byte 0xFD, 0x1D, 0x2E, 0x08 /* pointer to WaitForFlashWrite_Common */
+	.byte 0x04, 0x31, 0x9A, 0x08 /* pointer to mxMaxTime */
+	.byte 0x00, 0x00, 0x01, 0x00 /* size of 64KB total */
+	.byte 0x00, 0x10, 0x00, 0x00 /* size of 4KB per sector */
+	.byte 0x0C, 0x00 /* bitshift factor for sector size */
+	.byte 0x10, 0x00 /* 0x10 sectors */
+	.byte 0x00, 0x00, 0x00, 0x00 /* padding? */
+	.byte 0x03, 0x00, 0x01, 0x00 /* read/write wait timing */
+	.byte 0xBF, 0xD4 /* flash chip ID */
+	.byte 0x00, 0x00 /* padding */
+	/* flash chip identification for 64k Macronix */
+	.byte 0xE1, 0x1F, 0x2E, 0x08 /* pointer to ProgramFlashByte_MX */
+	.byte 0xAD, 0x20, 0x2E, 0x08 /* pointer to ProgramFlashSector_MX */
+	.byte 0x9D, 0x1E, 0x2E, 0x08 /* pointer to EraseFlashChip_MX */
+	.byte 0x11, 0x1F, 0x2E, 0x08 /* pointer to EraseFlashSector_MX */
+	.byte 0xFD, 0x1D, 0x2E, 0x08 /* pointer to WaitForFlashWrite_Common */
+	.byte 0x04, 0x31, 0x9A, 0x08 /* pointer to mxMaxTime */
+	.byte 0x00, 0x00, 0x01, 0x00 /* size of 64KB total */
+	.byte 0x00, 0x10, 0x00, 0x00 /* size of 4KB per sector */
+	.byte 0x0C, 0x00 /* bitshift factor for sector size */
+	.byte 0x10, 0x00 /* 0x10 sectors */
+	.byte 0x00, 0x00, 0x00, 0x00 /* padding? */
+	.byte 0x03, 0x00, 0x01, 0x00 /* read/write wait timing */
+	.byte 0xC2, 0x1C /* flash chip ID */
+	.byte 0x00, 0x00 /* padding */
 	b _0815300A
 	.pool
+	/* even though the instructions using these constants are gone, keep them around just in case (and to create a smaller patch) */
+	.byte 0xF8, 0x0F, 0x00, 0x00
+	.byte 0x25, 0x20, 0x01, 0x08
+	.byte 0xF4, 0x0F, 0x00, 0x00
+	.byte 0xF6, 0x0F, 0x00, 0x00
+	.byte 0xFC, 0x0F, 0x00, 0x00
+	.byte 0xFF, 0x3F, 0x00, 0x00
 _08153008:
 	movs r1, 0
 _0815300A:
