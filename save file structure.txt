@@ -111,6 +111,37 @@ If the device or emulator you're using this patch on does not save or boot corre
 
 
 
+Updates to version 1.1:
+
+Checksums of result:
+CRC32: E7B0C2AC
+MD5: 37b82fea4b90616203b59fbe33e36acd
+SHA1: 2c49b5ea3ae018da7831e86ab053f2a1bd894ef6
+SHA256: e65bcfaa63fee006dd8ab785c6d52de9a7681b89777f7d19d08b58979e7856eb
+SHA512: 9ba097996e89016e06c7c92f4de0ea5d4cab22b1d9bd2d2f0cdf4d861e076368148800fc962b8832448cf5b6121e650a37d2b242754eb0e90cb619dac0abf16d
+
+
+A lot @ 0x8152F88 -> The memory of the instructions of the read of the second save slot (which are just skipped over now) has been repurposed to hold two extra flash chip identification structures.
+
+2x @ 0x82E1AF8 -> The check if SwitchFlashBank needs to be called has been changed again, this time to call SwitchFlashBank whenever the flash size is not 64 MB, which is nonsensically huge. The idea is to always call SwitchFlashBank regardless of flash size without altering the code much.
+2x @ 0x82E1BC0 -> Same as above.
+2x @ 0x82E1C4C -> Same as above.
+
+pointers @ 0x02E1D84 and 0x09A30DC: Change the pointer to the location of the array of flash chip identification structures in IdentifyFlash to the new, bigger one (see below).
+
+Reverted the two original flash chip identification structures at 0x89A311C and 0x89A31C8 back to the default, mostly. The last one references a structure at 0x09A31A0 which is just a copy of the structure at 0x09A3104 that the other one uses, so I pointed it at that to reuse the structure at 0x09A31A0. Additionally, 0x89A314C was the fallback flash chip identification structure used in case the detected flash chip matches none of the types we know about. It has been repurposed as a fifth actual structure. There is no longer a fallback, in case of not detecting we just use the first one in the pointer array (which is the SST 512K). Not like there is much point to the fallback case, the game seems to intentionally hang if the detection fails.
+
+The structure at 0x09A31A0 is now used as a bigger array of pointers to flash chip identification structures, as the original was just 3 entries large -- the new one is 6. The original array at 0x09A30D0 is still there, but now unused, and could be repurposed if the need arises for a little bit of extra memory.
+
+The six entries are, in order:
+- Pointer to 0x8152F88, data for the SST 512K flash chip. (was instructions for read of second save slot)
+- Pointer to 0x8152FB8, data for the Macronix 512K flash chip. (was instructions for read of second save slot)
+- Pointer to 0x89A314C, data for the Panasonic 512K flash chip. (was fallback structure)
+- Pointer to 0x89A311C, data for the Macronix 1M flash chip. (unchanged from original game)
+- Pointer to 0x89A31C8, data for the Sanyo 1M flash chip. (unchanged from original game)
+- Null pointer to indicate end of array.
+
+To make this work, the loop to find the structure of the detected chip in IdentifyFlash has been modified:
 
 0x82E1D8C: 00 29 02 D1 14 3A 01 24 03 E0
 changes the 'flash chip unknown' cancel reason from 'maker is 0' to 'nullptr encountered'
@@ -120,6 +151,7 @@ sub r2,14h   // else select the info of the first flash chip
 mov r4,1h    // report failure
 b   92E1D9Eh // and break out of loop
 
+Scholars of GBA hardware may notice that I did not list the Atmel 512K flash chip. Due to the odd properties of that chip compared to the other five, I have decided to not support it. Hopefully this is not a problem.
 
 
 
